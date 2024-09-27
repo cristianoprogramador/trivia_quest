@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+
+  --sidebar-bg-light: #1e40af;
+  --sidebar-bg-dark: #1e293b;
+
+  --bg-light: #f3f4f6;
+  --bg-dark: #0f172a;
+
+  --text-light: #000000;
+  --text-dark: #ffffff;
+
+  --bg-card-light: #e5e7eb;
+  --bg-card-dark: #d7dadf;
+}
+
+.light {
+  --sidebar-bg: var(--sidebar-bg-light);
+  --bg: var(--bg-light);
+  --text-bg: var(--text-light);
+  --bg-card: var(--bg-card-light);
+}
+
+.dark {
+  --sidebar-bg: var(--sidebar-bg-dark);
+  --bg: var(--bg-dark);
+  --text-color: var(--text-dark);
+  --bg-card: var(--bg-card-dark);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  display: inline-block;
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+}
