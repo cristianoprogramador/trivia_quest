@@ -16,7 +16,7 @@ const ModalHeader = ({
         />
       </button>
 
-      <span className="font-semibold text-base">{title}</span>
+      <span className="font-bold text-xl">{title}</span>
     </div>
   );
 };

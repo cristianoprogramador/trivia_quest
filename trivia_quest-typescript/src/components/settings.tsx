@@ -57,7 +57,6 @@ export function Settings({
 }: SettingsProps) {
   const handleSaveSettings = () => {
     setModalInfo(false);
-    // As configurações já estão atualizadas no HomePage
   };
 
   return (
@@ -68,7 +67,6 @@ export function Settings({
       />
       <div className="w-full mt-3 flex flex-col space-y-1.5 gap-1 rounded-lg items-center">
         <div className="flex flex-col justify-between gap-3">
-          {/* Seleção de Categoria */}
           <label className="w-full">
             <span className="block mb-2 text-gray-700">Category</span>
             <select
@@ -84,7 +82,6 @@ export function Settings({
             </select>
           </label>
 
-          {/* Seleção de Número de Perguntas */}
           <label className="w-full">
             <span className="block mb-2 text-gray-700">
               Number of Questions
@@ -102,7 +99,6 @@ export function Settings({
             </select>
           </label>
 
-          {/* Seleção de Dificuldade */}
           <label className="w-full">
             <span className="block mb-2 text-gray-700">Difficulty</span>
             <select
@@ -117,7 +113,6 @@ export function Settings({
             </select>
           </label>
 
-          {/* Seleção de Tipo de Pergunta */}
           <label className="w-full">
             <span className="block mb-2 text-gray-700">Question Type</span>
             <select

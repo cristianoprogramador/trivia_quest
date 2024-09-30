@@ -6,13 +6,19 @@ import thinkTrivia from "../assets/lotties/triviathink.json";
 import { useEffect, useState } from "react";
 import { IoSettingsOutline } from "react-icons/io5";
 import { Settings } from "../components/settings";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { PiRanking } from "react-icons/pi";
+import { Rank } from "../components/rank";
 
 export function HomePage() {
   const [step, setStep] = useState(1);
   const [goingTriviaLoading, setGoingTriviaLoading] = useState(false);
   const [modalInfo, setModalInfo] = useState(false);
+  const [modalRank, setModalRank] = useState(false);
+
   const navigate = useNavigate();
+  const location = useLocation();
+  const finalScore = location.state?.finalScore || null;
 
   const [category, setCategory] = useState<number>(0);
   const [questionCount, setQuestionCount] = useState<number>(5);
@@ -20,6 +26,7 @@ export function HomePage() {
   const [questionType, setQuestionType] = useState<string>("any");
 
   const handleModalInfo = () => setModalInfo(true);
+  const handleModalRank = () => setModalRank(true);
 
   const handleStartGame = async () => {
     const params = new URLSearchParams();
@@ -38,7 +45,17 @@ export function HomePage() {
       const data = await response.json();
 
       if (data.response_code === 0) {
-        navigate("/game", { state: { questions: data.results } });
+        navigate("/game", {
+          state: {
+            questions: data.results,
+            settings: {
+              category,
+              questionCount,
+              difficulty,
+              questionType,
+            },
+          },
+        });
       } else {
         alert(
           "No questions found for the selected settings. Please try different settings."
@@ -88,7 +105,14 @@ export function HomePage() {
 
       {step === 2 && (
         <>
-          <div className="absolute top-4 w-full flex justify-end px-6 text-white">
+          <div className="absolute top-4 w-full flex justify-between px-6 text-white">
+            <div
+              className="flex flex-col gap-1 items-center cursor-pointer"
+              onClick={handleModalRank}
+            >
+              <PiRanking size={25} />
+              <div>Rank</div>
+            </div>
             <div
               className="flex flex-col gap-1 items-center cursor-pointer"
               onClick={handleModalInfo}
@@ -97,7 +121,13 @@ export function HomePage() {
               <div>Settings</div>
             </div>
           </div>
-
+          {finalScore !== null && (
+            <div className="absolute top-16 w-full flex justify-center text-white">
+              <h2 className="text-2xl font-bold">
+                Your final score was: {finalScore}
+              </h2>
+            </div>
+          )}
           <div
             className="flex flex-col h-full gap-1 items-center justify-center w-full cursor-pointer"
             onClick={handleStartGame}
@@ -136,6 +166,8 @@ export function HomePage() {
         questionType={questionType}
         setQuestionType={setQuestionType}
       />
+
+      <Rank modalInfo={modalRank} setModalInfo={setModalRank} />
     </main>
   );
 }

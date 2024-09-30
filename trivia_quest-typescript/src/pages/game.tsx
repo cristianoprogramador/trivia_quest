@@ -1,75 +1,107 @@
-import { SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import he from "he";
 import Lottie from "lottie-react";
 import successTrivia from "../assets/lotties/triviasuccess.json";
 import failureTrivia from "../assets/lotties/triviafailure.json";
+import { PiRanking } from "react-icons/pi";
+import { Rank } from "../components/rank";
+
+interface Question {
+  category: string;
+  type: "multiple" | "boolean";
+  difficulty: string;
+  question: string;
+  correct_answer: string;
+  incorrect_answers: string[];
+}
 
 export function GamePage() {
   const location = useLocation();
-  const { questions } = location.state || {};
+  const { questions, settings } = location.state || {};
   const navigate = useNavigate();
+  const [modalRank, setModalRank] = useState(false);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [showAnswerFeedback, setShowAnswerFeedback] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [answers, setAnswers] = useState<string[]>([]);
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-  const [showFailureAnimation, setShowFailureAnimation] = useState(false);
+  const [answerResult, setAnswerResult] = useState<
+    "success" | "failure" | null
+  >(null);
+
+  const handleModalRank = () => setModalRank(true);
 
   useEffect(() => {
     if (questions && questions.length > 0) {
       const currentQuestion = questions[currentQuestionIndex];
-      const correctAnswer = he.decode(currentQuestion.correct_answer);
-      const incorrectAnswers = currentQuestion.incorrect_answers.map((ans: string) =>
-        he.decode(ans)
-      );
-
-      let answersArray = [];
-
-      if (currentQuestion.type === "boolean") {
-        answersArray = ["True", "False"];
-      } else {
-        answersArray = [correctAnswer, ...incorrectAnswers];
-      }
-
-      setAnswers(answersArray);
+      const decodedQuestion = decodeAndShuffleAnswers(currentQuestion);
+      setAnswers(decodedQuestion);
     }
   }, [currentQuestionIndex, questions]);
 
-  const handleAnswerSelect = (answer: SetStateAction<string>) => {
+  const decodeAndShuffleAnswers = (question: Question) => {
+    const correctAnswer = he.decode(question.correct_answer);
+    const incorrectAnswers = question.incorrect_answers.map((answer) =>
+      he.decode(answer)
+    );
+
+    const answersArray =
+      question.type === "boolean"
+        ? ["True", "False"]
+        : [correctAnswer, ...incorrectAnswers];
+
+    return answersArray;
+  };
+
+  const handleAnswerSelect = (answer: string) => {
     setSelectedAnswer(answer);
   };
 
   const handleConfirmAnswer = () => {
-    setShowAnswerFeedback(true);
-
     const currentQuestion = questions[currentQuestionIndex];
     const correctAnswer = he.decode(currentQuestion.correct_answer);
 
     if (selectedAnswer === correctAnswer) {
-      setScore(score + 10);
-      setShowSuccessAnimation(true);
+      setScore((prevScore) => prevScore + 1);
+      setAnswerResult("success");
     } else {
-      setShowFailureAnimation(true);
+      setAnswerResult("failure");
     }
 
     setTimeout(() => {
-      setShowSuccessAnimation(false);
-      setShowFailureAnimation(false);
+      setAnswerResult(null);
+      handleNextQuestion();
     }, 1000);
   };
 
   const handleNextQuestion = () => {
     setSelectedAnswer("");
-    setShowAnswerFeedback(false);
 
     if (currentQuestionIndex + 1 < questions.length) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
     } else {
+      saveQuizHistory();
       navigate("/", { state: { finalScore: score } });
     }
+  };
+
+  const saveQuizHistory = () => {
+    const existingHistory = JSON.parse(
+      localStorage.getItem("quizHistory") || "[]"
+    );
+    const currentPlay = {
+      timestamp: new Date().toISOString(),
+      score: score,
+      totalQuestions: questions.length,
+      category: settings.category,
+      difficulty: settings.difficulty,
+      questionType: settings.questionType,
+    };
+
+    const updatedHistory = [...existingHistory, currentPlay];
+
+    localStorage.setItem("quizHistory", JSON.stringify(updatedHistory));
   };
 
   if (!questions || questions.length === 0) {
@@ -92,6 +124,16 @@ export function GamePage() {
 
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center bg-gradient-to-r from-blue-900 to-blue-600 p-4">
+      <div className="absolute top-4 w-full flex justify-start px-6 text-white">
+        <div
+          className="flex flex-col gap-1 items-center cursor-pointer"
+          onClick={handleModalRank}
+        >
+          <PiRanking size={25} />
+          <div>Rank</div>
+        </div>
+      </div>
+
       <div className="text-white text-xl font-bold self-end">
         Score: {score}
       </div>
@@ -118,24 +160,24 @@ export function GamePage() {
           let buttonClass = "bg-white text-gray-800";
 
           if (selectedAnswer === answer) {
-            if (!showAnswerFeedback) {
-              buttonClass = "bg-blue-500 text-white";
-            } else {
-              if (answer === correctAnswer) {
-                buttonClass = "bg-green-500 text-white";
-              } else {
-                buttonClass = "bg-blue-500 text-white";
-              }
-            }
-          } else if (showAnswerFeedback && answer === correctAnswer) {
+            buttonClass = "bg-blue-500 text-white";
+          }
+
+          if (answerResult && answer === correctAnswer) {
             buttonClass = "bg-green-500 text-white";
+          } else if (
+            answerResult &&
+            answer === selectedAnswer &&
+            selectedAnswer !== correctAnswer
+          ) {
+            buttonClass = "bg-red-500 text-white";
           }
 
           return (
             <button
               key={index}
               onClick={() => handleAnswerSelect(answer)}
-              disabled={showAnswerFeedback}
+              disabled={!!answerResult}
               className={`w-full p-2 mb-2 text-left rounded-md border ${buttonClass}`}
             >
               {answer}
@@ -144,7 +186,7 @@ export function GamePage() {
         })}
       </div>
 
-      {!showAnswerFeedback && selectedAnswer && (
+      {!answerResult && selectedAnswer && (
         <button
           onClick={handleConfirmAnswer}
           className="mt-4 bg-blue-600 text-white p-2 rounded-md"
@@ -153,20 +195,20 @@ export function GamePage() {
         </button>
       )}
 
-      {showAnswerFeedback && (
+      {answerResult && (
         <div className="mt-4">
           <button
             onClick={handleNextQuestion}
             className="mt-4 bg-blue-600 text-white p-2 rounded-md"
           >
             {currentQuestionIndex + 1 < questions.length
-              ? "Next Question"
-              : "Finish Quiz"}
+              ? "Próxima Pergunta"
+              : "Finalizar Quiz"}
           </button>
         </div>
       )}
 
-      {showSuccessAnimation && (
+      {answerResult === "success" && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <Lottie
             animationData={successTrivia}
@@ -176,7 +218,7 @@ export function GamePage() {
         </div>
       )}
 
-      {showFailureAnimation && (
+      {answerResult === "failure" && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <Lottie
             animationData={failureTrivia}
@@ -185,6 +227,8 @@ export function GamePage() {
           />
         </div>
       )}
+
+      <Rank modalInfo={modalRank} setModalInfo={setModalRank} />
     </main>
   );
 }
