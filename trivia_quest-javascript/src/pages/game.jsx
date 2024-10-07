@@ -7,14 +7,6 @@ import failureTrivia from "../assets/lotties/triviafailure.json";
 import { PiRanking } from "react-icons/pi";
 import { Rank } from "../components/rank";
 
-interface Question {
-  category: string;
-  type: "multiple" | "boolean";
-  difficulty: string;
-  question: string;
-  correct_answer: string;
-  incorrect_answers: string[];
-}
 
 export function GamePage() {
   const location = useLocation();
@@ -25,10 +17,8 @@ export function GamePage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState("");
-  const [answers, setAnswers] = useState<string[]>([]);
-  const [answerResult, setAnswerResult] = useState<
-    "success" | "failure" | null
-  >(null);
+  const [answers, setAnswers] = useState([]);
+  const [answerResult, setAnswerResult] = useState(null);
 
   const handleModalRank = () => setModalRank(true);
 
@@ -40,7 +30,7 @@ export function GamePage() {
     }
   }, [currentQuestionIndex, questions]);
 
-  const decodeAndShuffleAnswers = (question: Question) => {
+  const decodeAndShuffleAnswers = (question) => {
     const correctAnswer = he.decode(question.correct_answer);
     const incorrectAnswers = question.incorrect_answers.map((answer) =>
       he.decode(answer)
@@ -54,11 +44,11 @@ export function GamePage() {
     return shuffleArray(answersArray);
   };
 
-  const shuffleArray = (array: string[]) => {
+  const shuffleArray = (array) => {
     return array.sort(() => Math.random() - 0.5);
   };
 
-  const handleAnswerSelect = (answer: string) => {
+  const handleAnswerSelect = (answer) => {
     setSelectedAnswer(answer);
   };
 
@@ -125,6 +115,7 @@ export function GamePage() {
   const currentQuestion = questions[currentQuestionIndex];
   const questionText = he.decode(currentQuestion.question);
   const correctAnswer = he.decode(currentQuestion.correct_answer);
+  const correctCategory = he.decode(currentQuestion.category);
 
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center bg-gradient-to-r from-blue-900 to-blue-600 p-4">
@@ -152,7 +143,7 @@ export function GamePage() {
       </div>
 
       <h1 className="text-2xl font-bold text-white mt-4">
-        {currentQuestion.category}
+        {correctCategory}
       </h1>
 
       <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-2xl mt-4">
